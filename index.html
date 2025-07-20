@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus WiFi Coverage Planning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .presentation-container {
+            max-width: 100vw;
+            margin: 0 auto;
+        }
+
+        .slide {
+            min-height: 100vh;
+            padding: 40px;
+            display: none;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            margin: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            animation: slideIn 0.6s ease-out;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 3.5em;
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        h2 {
+            font-size: 2.5em;
+            margin-bottom: 25px;
+            color: #FFD700;
+            border-bottom: 3px solid #FFD700;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 2em;
+            margin: 20px 0 15px 0;
+            color: #FFA500;
+        }
+
+        .presenter-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        .group-members {
+            text-align: left;
+        }
+
+        .instructor {
+            text-align: right;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            padding: 15px 25px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 215, 0, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .slide-counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+            align-items: start;
+        }
+
+        .diagram {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .network-topology {
+            width: 100%;
+            height: 300px;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%);
+            border-radius: 10px;
+            position: relative;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .network-node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #333;
+            border: 3px solid rgba(255,255,255,0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .connection-line {
+            position: absolute;
+            height: 3px;
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            border-radius: 2px;
+            opacity: 0.8;
+            animation: dataFlow 3s infinite;
+        }
+
+        @keyframes dataFlow {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #FFD700;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-list li:hover {
+            transform: translateX(10px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .department-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .department-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .department-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .tech-specs {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .presenter-tag {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 215, 0, 0.9);
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            h1 { font-size: 2.5em; }
+            h2 { font-size: 2em; }
+            h3 { font-size: 1.5em; }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .navigation {
+                bottom: 10px;
+            }
+            
+            .nav-btn {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+        }
+
+        .campus-layout {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .building {
+            position: absolute;
+            background: rgba(255, 215, 0, 0.8);
+            border-radius: 8px;
+            color: #333;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .building:hover {
+            background: rgba(255, 165, 0, 0.9);
+            transform: scale(1.05);
+        }
+
+        .wifi-coverage {
+            position: absolute;
+            border: 2px dashed rgba(0, 255, 0, 0.6);
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,255,0,0.1) 0%, transparent 70%);
+            animation: wifiPulse 3s infinite;
+        }
+
+        @keyframes wifiPulse {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <div class="slide-counter">
+            <span id="current-slide">1</span> / <span id="total-slides">15</span>
+        </div>
+
+        <!-- Slide 1: Title Slide -->
+        <div class="slide active">
+            <h1>Campus WiFi Coverage Planning</h1>
+            <div style="text-align: center; margin: 50px 0;">
+                <h3>Computer Networks and Communication</h3>
+                <div style="font-size: 1.2em; margin: 30px 0; opacity: 0.9;">
+                    A Comprehensive Approach to Wireless Network Infrastructure
+                </div>
+            </div>
+            <div class="presenter-info">
+                <div class="group-members">
+                    <h3>Group Members:</h3>
+                    <div style="font-size: 1.3em; line-height: 1.6;">
+                        • Anas (Network Operations)<br>
+                        • Abdullah (Infrastructure Planning)<br>
+                        • Abdul Rehman (Implementation & Security)
+                    </div>
+                </div>
+                <div class="instructor">
+                    <h3>Instructor:</h3>
+                    <div style="font-size: 1.4em; font-weight: bold; color: #FFD700;">
+                        Prof. Muzammil
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Overview -->
+        <div class="slide">
+            <div class="presenter-tag">Team Overview</div>
+            <h2>Presentation Overview</h2>
+            <div class="content-grid">
+                <div>
+                    <h3>📋 What We'll Cover</h3>
+                    <ul class="feature-list">
+                        <li><strong>Network Fundamentals</strong> - How WiFi networks operate (Anas)</li>
+                        <li><strong>Campus Infrastructure</strong> - Planning and design considerations (Abdullah)</li>
+                        <li><strong>Implementation</strong> - Setup, security, and management (Abdul Rehman)</li>
+                        <li><strong>Department Integration</strong> - Tailored solutions for each area</li>
+                        <li><strong>Performance Optimization</strong> - Ensuring reliable coverage</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>🎯 Objectives</h3>
+                    <div class="diagram">
+                        <div style="font-size: 1.1em; line-height: 1.8;">
+                            ✓ Comprehensive WiFi coverage across campus<br>
+                            ✓ Scalable and future-ready infrastructure<br>
+                            ✓ Security and access control implementation<br>
+                            ✓ Departmental requirement analysis<br>
+                            ✓ Cost-effective solution design<br>
+                            ✓ Performance monitoring and management
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Anas - Network Fundamentals Part 1 -->
+        <div class="slide">
+            <div class="presenter-tag">Anas - Network Operations</div>
+            <h2>How WiFi Networks Work</h2>
+            <div class="content-grid">
+                <div>
+                    <h3>🌐 Fundamental Concepts</h3>
+                    <div class="tech-specs">
+                        <strong>IEEE 802.11 Standards:</strong><br>
+                        • 802.11n (150-600 Mbps)<br>
+                        • 802.11ac (433 Mbps - 6.93 Gbps)<br>
+                        • 802.11ax/WiFi 6 (up to 9.6 Gbps)<br><br>
+                        
+                        <strong>Frequency Bands:</strong><br>
+                        • 2.4 GHz: Longer range, more interference<br>
+                        • 5 GHz: Higher speed, shorter range<br>
+                        • 6 GHz: WiFi 6E, least congested
+                    </div>
+                </div>
+                <div>
+                    <h3>📡 Network Components</h3>
+                    <div class="network-topology">
+                        <div class="network-node" style="top: 50px; left: 50px;">Core</div>
+                        <div class="network-node" style="top: 50px; right: 50px;">Router</div>
+                        <div class="network-node" style="bottom: 50px; left: 100px;">AP1</div>
+                        <div class="network-node" style="bottom: 50px; center: 200px;">AP2</div>
+                        <div class="network-node" style="bottom: 50px; right: 100px;">AP3</div>
+                        
+                        <div class="connection-line" style="top: 80px; left: 110px; width: 200px; transform: rotate(0deg);"></div>
+                        <div class="connection-line" style="top: 120px; left: 80px; width: 150px; transform: rotate(45deg);"></div>
+                        <div class="connection-line" style="top: 120px; right: 80px; width: 150px; transform: rotate(-45deg);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Anas - Network Operations Part 2 -->
+        <div class="slide">
+            <div class="presenter-tag">Anas - Network Operations</div>
+            <h2>Network Architecture & Signal Propagation</h2>
+            <div class="content-grid">
+                <div>
+                    <h3>🏗️ Network Layers</h3>
+                    <ul class="feature-list">
+                        <li><strong>Core Layer:</strong> High-speed backbone, redundant connections</li>
+                        <li><strong>Distribution Layer:</strong> Policy enforcement, traffic filtering</li>
+                        <li><strong>Access Layer:</strong> End-user connectivity, WiFi access points</li>
+                        <li><strong>Management Layer:</strong> Network monitoring, configuration</li>
+                    </ul>
+                    
+                    <h3>📶 Signal Considerations</h3>
+                    <div class="tech-specs">
+                        <strong>Coverage Factors:</strong><br>
+                        • Power output (dBm)<br>
+                        • Antenna gain and pattern<br>
+                        • Environmental obstacles<br>
+                        • Interference sources<br>
+                        • Channel planning
+                    </div>
+                </div>
+                <div>
+                    <h3>🔄 Data Flow Process</h3>
+                    <div class="diagram">
+                        <div style="text-align: left; font-size: 1.1em; line-height: 1.8;">
+                            <strong>1. Authentication:</strong><br>
+                            Device → AP → RADIUS Server<br><br>
+                            
+                            <strong>2. Association:</strong><br>
+                            Establish connection parameters<br><br>
+                            
+                            <strong>3. DHCP Assignment:</strong><br>
+                            IP address allocation<br><br>
+                            
+                            <strong>4. Data Transmission:</strong><br>
+                            Encrypted data packets<br><br>
+                            
+                            <strong>5. Quality of Service:</strong><br>
+                            Traffic prioritization
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Anas - Protocol Deep Dive -->
+        <div class="slide">
+            <div class="presenter-tag">Anas - Network Operations</div>
+            <h2>WiFi Protocols & Performance</h2>
+            <div class="content-grid">
+                <div>
+                    <h3>🔐 Security Protocols</h3>
+                    <div class="tech-specs">
+                        <strong>WPA3 Enterprise Features:</strong><br>
+                        • 192-bit encryption<br>
+                        • Perfect Forward Secrecy<br>
+                        • Protected Management Frames<br>
+                        • Enhanced authentication<br><br>
+                        
+                        <strong>Authentication Methods:</strong><br>
+                        • EAP-TLS (Certificate-based)<br>
+                        • PEAP-MSCHAPv2 (Username/Password)<br>
+                        • EAP-TTLS (Tunneled authentication)
+                    </div>
+                    
+                    <h3>⚡ Performance Optimization</h3>
+                    <ul class="feature-list">
+                        <li>Channel bonding (40/80/160 MHz)</li>
+                        <li>MU-MIMO technology</li>
+                        <li>Beamforming capabilities</li>
+                        <li>Load balancing algorithms</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>📊 Network Monitoring</h3>
+                    <div class="diagram">
+                        <div style="font-size: 1.1em;">
+                            <strong>Key Performance Indicators:</strong><br><br>
+                            📈 <strong>Throughput:</strong> Data transfer rates<br>
+                            📊 <strong>Latency:</strong> Response times<br>
+                            📋 <strong>Packet Loss:</strong> Connection reliability<br>
+                            📶 <strong>Signal Strength:</strong> Coverage quality<br>
+                            👥 <strong>User Density:</strong> Concurrent connections<br>
+                            🔄 <strong>Roaming:</strong> Seamless handoffs<br><br>
+                            
+                            <strong>Monitoring Tools:</strong><br>
+                            • SNMP-based monitoring<br>
+                            • Wireless site surveys<br>
+                            • Real-time analytics<br>
+                            • Performance trending
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Abdullah - Campus Infrastructure Part 1 -->
+        <div class="slide">
+            <div class="presenter-tag">Abdullah - Infrastructure Planning</div>
+            <h2>Campus Infrastructure Analysis</h2>
+            <div class="content-grid">
+                <div>
+                    <h3>🏫 Campus Layout Overview</h3>
+                    <div class="campus-layout">
+                        <div class="building" style="top: 20px; left: 50px; width: 80px; height: 60px;">Admin<br>Block</div>
+                        <div class="building" style="top: 20px; right: 50px; width: 80px; height: 60px;">Library</div>
+                        <div class="building" style="top: 120px; left: 30px; width: 120px; height: 80px;">Engineering<br>Department</div>
+                        <div class="building" style="top: 120px; right: 30px; width: 120px; height: 80px;">Science<br>Block</div>
+                        <div class="building" style="bottom: 80px; left: 80px; width: 100px; height: 70px;">Student<br>Center</div>
+                        <div class="building" style="bottom: 80px; right: 80px; width: 100px; height: 70px;">Sports<br>Complex</div>
+                        <div class="building" style="bottom: 20px; left: 150px; width: 200px; height: 40px;">Cafeteria & Dining</div>
+                        
+                        <!-- WiFi Coverage Areas -->
+                        <div class="wifi-coverage" style="top: 100px; left: 100px; width: 300px; height: 300px;"></div>
+                        <div class="wifi-coverage" style="top: 50px; left: 200px; width: 200px; height: 200px;"></div>
+                    </div>
+                </div>
+                <div>
+                    <h3>📋 Infrastructure Requirements</h3>
+                    <ul class="feature-list">
+                        <li><strong>Physical Infrastructure:</strong> Ethernet backbone, fiber optic connections</li>
+                        <li><strong>Power Systems:</strong> PoE+ switches, backup power solutions</li>
+                        <li><strong>Environmental:</strong> Weather-resistant outdoor equipment</li>
+                        <li><strong>Scalability:</strong> Future expansion capabilities</li>
+                        <li><strong>Redundancy:</strong> Multiple internet connections, failover systems</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Abdullah - Site Survey & Planning -->
+        <div class="slide">
+            <div class="presenter-tag">Abdullah - Infrastructure Planning</div>
+            <h2>Site Survey & Coverage Planning</h2>
+            <div class="content-grid">
+                <div>
+                    <h3>🔍 Site Survey Process</h3>
+                    <div class="tech-specs">
+                        <strong>Predictive Survey:</strong><br>
+                        • Floor plans and building materials<br>
+                        • RF modeling software<br>
+                        • Initial AP placement planning<br><br>
+                        
+                        <strong>Physical Survey:</strong><br>
+                        • On-site measurements<br>
+                        • Signal strength testing<br>
+                        • Interference identification<br>
+                        • Coverage gap analysis<br><br>
+                        
+                        <strong>Post-Deployment:</strong><br>
+                        • Validation testing<br>
+                        • Performance optimization<br>
+                        • Coverage verification
+                    </div>
+                </div>
+                <div>
+                    <h3>📐 Coverage Planning Factors</h3>
+                    <ul class="feature-list">
+                        <li><strong>Building Materials:</strong> Concrete walls, metal structures affect signal</li>
+                        <li><strong>User Density:</strong> High-traffic areas need more capacity</li>
+                        <li><strong>Application Requirements:</strong> Video streaming, VoIP needs</li>
+                        <li><strong>Outdoor Coverage:</strong> Campus grounds, parking areas</li>
+                        <li><strong>Vertical Coverage:</strong> Multi-story buildings</li>
+                        <li><strong>Emergency Coverage:</strong> Critical area redundancy</li>
+                    </ul>
+                    
+                    <div class="diagram">
+                        <h4>Coverage Design Goals:</h4>
+                        <div style="font-size: 1.1em; margin-top: 15px;">
+                            📶 95% campus area coverage<br>
+                            🚀 50+ Mbps average throughput<br>
+                            👥 100+ concurrent users per AP<br>
+                            🔄 <3 second roaming time
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Abdullah - Department-wise Analysis -->
+        <div class="slide">
+            <div class="presenter-tag">Abdullah - Infrastructure Planning</div>
+            <h2>Department-wise Requirements Analysis</h2>
+            <div class="department-grid">
+                <div class="department-card">
+                    <h3>🏛️ Administrative Block</h3>
+                    <div style="text-align: left; margin-top: 15px;">
+                        <strong>Requirements:</strong><br>
+                        • High-security access<br>
+                        • Reliable connectivity<br>
+                        • Guest network isolation<br><br>
+                        <strong>Coverage:</strong> 15-20 APs<br>
+                        <strong>Capacity:</strong> 200+ users<br>
+                        <strong>Security:</strong> WPA3-Enterprise
+                    </div>
+                </div>
+                
+                <div class="department-card">
+                    <h3>📚 Library & Research</h3>
+                    <div style="text-align: left; margin-top: 15px;">
+                        <strong>Requirements:</strong><br>
+                        • High-density coverage<br>
+                        • Silent operation<br>
+                        • Extended study hours<br><br>
+                        <strong>Coverage:</strong> 25-30 APs<br>
+                        <strong>Capacity:</strong> 500+ users<br>
+                        <strong>Special:</strong> 24/7 operation
+                    </div>
+                </div>
+                
+                <div class="department-card">
+                    <h3>🔧 Engineering Labs</h3>
+                    <div style="text-align: left; margin-top: 15px;">
+                        <strong>Requirements:</strong><br>
+                        • High-bandwidth applications<br>
+                        • IoT device connectivity<br>
+                        • Specialized equipment<br><br>
+                        <strong>Coverage:</strong> 30-35 APs<br>
+                        <strong>Capacity:</strong> 300+ devices<br>
+                        <strong>Bandwidth:</strong> 1 Gbps per lab
+                    </div>
+                </div>
+                
+                <div class="department-card">
+                    <h3>🧪 Science Laboratories</h3>
+                    <div style="text-align: left; margin-top: 15px;">
+                        <strong>Requirements:</strong><br>
+                        • Research data transmission<br>
+                        • Equipment connectivity<br>
+                        • Chemical-resistant housing<br><br>
+                        <strong>Coverage:</strong> 20-25 APs<br>
+                        <strong>Capacity:</strong> 250+ devices<br>
+                        <strong>Environment:</strong> IP65 rated
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Abdullah - Infrastructure Components -->
+        <div class="slide">
+            <div class="presenter-tag">Abdullah - Infrastructure Planning</div>
+            <h2>Network Infrastructure Components</h2>
+            <div class="content-grid">
+                <div>
+                    <h3>🌐 Core Network Equipment</h3>
+                    <div class="tech-specs">
+                        <strong>Core Switches:</strong><br>
+                        • Cisco Catalyst 9600 Series<br>
+                        • 40/100 Gbps uplinks<br>
+                        • Redundant power supplies<br>
+                        • Layer 3 routing capabilities<br><br>
+                        
+                        <strong>Distribution Switches:</strong><br>
+                        • Cisco Catalyst 9300 Series<br>
+                        • PoE+ for access points<br>
+                        • 10 Gbps uplinks<br>
+                        • VLAN segmentation<br><br>
+                        
+                        <strong>Wireless Controllers:</strong><br>
+                        • Cisco 9800-CL (Cloud)<br>
+                        • Central management<br>
+                        • 1000+ AP support<br>
+                        • Zero-touch provisioning
+                    </div>
+                </div>
+                <div>
+                    <h3>📡 Access Points & Coverage</h3>
+                    <ul class="feature-list">
+                        <li><strong>Indoor APs:</strong> Cisco 9130AXI (WiFi 6)<br>
+                        Dual-band, 4x4 MIMO, 2.5 Gbps port</li>
+                        <li><strong>Outdoor APs:</strong> Cisco 9164I<br>
+                        Weather-resistant, directional antennas</li>
+                        <li><strong>High-Density APs:</strong> Cisco 9166I<br>
+                        Auditoriums, lecture halls, events</li>
+                        <li><strong>Specialized APs:</strong> Industrial-grade<br>
+                        Labs, workshops, harsh environments</li>
+                    </ul>
+                    
+                    <h3>🔧 Supporting Infrastructure</h3>
+                    <div class="tech-specs">
+                        <strong>Cabling System:</strong><br>
+                        • Cat6A for new installations<br>
+                        • Fiber optic backbone<br>
+                        • Structured cabling standards<br><br>
+                        
+                        <strong>Power Infrastructure:</strong><br>
+                        • UPS systems for core equipment<br>
+                        • PoE+ switches (30W per port)<br>
+                        • Generator backup for data center
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Abdul Rehman - Implementation Strategy -->
+        <div class="slide">
+            <div class="presenter-tag">Abdul Rehman - Implementation & Security</div>
+            <h2>Implementation Strategy & Timeline</h2>
+            <div class="content-grid">
+                <div>
+                    <h3>📅 Implementation Phases</h3>
+                    <div class="tech-specs">
+                        <strong>Phase 1 - Core Infrastructure (Weeks 1-4):</strong><br>
+                        • Install core switches and controllers<br>
+                        • Establish fiber backbone<br>
+                        • Configure network management<br><br>
+                        
+                        <strong>Phase 2 - Critical Areas (Weeks 5-8):</strong><br>
+                        • Administrative buildings<br>
+                        • Library and main classrooms<br>
+                        • Engineering and science labs<br><br>
+                        
+                        <strong>Phase 3 - Extended Coverage (Weeks 9-12):</strong><br>
+                        • Student areas and dormitories<br>
+                        • Outdoor spaces<br>
+                        • Sports and recreational facilities<br><br>
+                        
+                        <strong>Phase 4 - Optimization (Weeks 13-16):</strong><br>
+                        • Performance testing<br>
+                        • Fine-tuning and optimization<br>
+                        • Staff training and handover
+                    </div>
+                </div>
+                <div>
+                    <h3>🛠️ Installation Process</h3>
+                    <ul class="feature-list">
+                        <li><strong>Site Preparation:</strong><br>
+                        Cable routing, mounting hardware installation</li>
+                        <li><strong>Equipment Installation:</strong><br>
+                        AP mounting, switch rack setup</li>
+                        <li><strong>Configuration:</strong><br>
+                        Network settings, security policies</li>
+                        <li><strong>Testing:</strong><br>
+                        Signal strength, throughput validation</li>
+                        <li><strong>Documentation:</strong><br>
+                        Network diagrams, configuration backup</li>
+                    </ul>
+                    
+                    <div class="diagram">
+                        <h4>🎯 Success Metrics:</h4>
+                        <div style="font-size: 1.1em; margin-top: 15px;">
+                            ✅ 98% uptime SLA<br>
+                            📊 <50ms latency campus-wide<br>
+                            📈 80% user satisfaction score<br>
+                            🔒 Zero security incidents<br>
+                            📱 5000+ concurrent users
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Abdul Rehman - Security Implementation -->
+        <div class="slide">
+            <div class="presenter-tag">Abdul Rehman - Implementation & Security</div>
+            <h2>Security Implementation & Access Control</h2>
+            <div class="content-grid">
+                <div>
+                    <h3>🔐 Multi-layered Security Architecture</h3>
+                    <div class="tech-specs">
+                        <strong>Network Segmentation:</strong><br>
+                        • Faculty/Staff Network (VLAN 10)<br>
+                        • Student Network (VLAN 20)<br>
+                        • Guest Network (VLAN 30)<br>
+                        • IoT/Device Network (VLAN 40)<br>
+                        • Management Network (VLAN 99)<br><br>
+                        
+                        <strong>Authentication Systems:</strong><br>
+                        • RADIUS Server (FreeRADIUS/Cisco ISE)<br>
+                        • Active Directory integration<br>
+                        • Certificate-based authentication<br>
+                        • Multi-factor authentication (MFA)<br>
+                        • Guest portal with sponsor approval
+                    </div>
+                </div>
+                <div>
+                    <h3>🛡️ Security Policies & Controls</h3>
+                    <ul class="feature-list">
+                        <li><strong>Access Control Lists (ACLs):</strong><br>
+                        Department-based access restrictions</li>
+                        <li><strong>Firewall Rules:</strong><br>
+                        Inter-VLAN communication policies</li>
+                        <li><strong>Intrusion Detection:</strong><br>
+                        Wireless IPS/IDS monitoring</li>
+                        <li><strong>Rogue AP Detection:</strong><br>
+                        Automatic threat identification</li>
+                        <li><strong>Traffic Analysis:</strong><br>
+                        DPI for suspicious activity</li>
+                        <li><strong>Compliance:</strong><br>
+                        Data protection and privacy laws</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Abdul Rehman - Network Management -->
+        <div class="slide">
+            <div class="presenter-tag">Abdul Rehman - Implementation & Security</div>
+            <h2>Network Management & Monitoring</h2>
+            <div class="content-grid">
+                <div>
+                    <h3>📊 Centralized Management Platform</h3>
+                    <div class="tech-specs">
+                        <strong>Cisco DNA Center Features:</strong><br>
+                        • Network automation and orchestration<br>
+                        • Intent-based networking (IBN)<br>
+                        • Policy management<br>
+                        • Software-defined access (SDA)<br><br>
+                        
+                        <strong>Monitoring Capabilities:</strong><br>
+                        • Real-time network health<br>
+                        • User experience analytics<br>
+                        • Application performance monitoring<br>
+                        • Predictive analytics<br>
+                        • Automated troubleshooting<br><br>
+                        
+                        <strong>Reporting & Analytics:</strong><br>
+                        • Usage statistics and trends<br>
+                        • Capacity planning reports<br>
+                        • Security incident logs<br>
+                        • Performance benchmarking
+                    </div>
+                </div>
+                <div>
+                    <h3>🔧 Operational Procedures</h3>
+                    <ul class="feature-list">
+                        <li><strong>Configuration Management:</strong><br>
+                        Automated backups, version control</li>
+                        <li><strong>Change Management:</strong><br>
+                        Controlled update procedures</li>
+                        <li><strong>Incident Response:</strong><br>
+                        24/7 NOC support, escalation procedures</li>
+                        <li><strong>Maintenance Windows:</strong><br>
+                        Scheduled updates, minimal disruption</li>
+                        <li><strong>Disaster Recovery:</strong><br>
+                        Business continuity planning</li>
+                    </ul>
+                    
+                    <div class="diagram">
+                        <h4>📱 Management Tools:</h4>
+                        <div style="font-size: 1.1em; margin-top: 15px;">
+                            🖥️ <strong>Web Console:</strong> Central dashboard<br>
+                            📱 <strong>Mobile App:</strong> On-the-go management<br>
+                            🔔 <strong>Alerts:</strong> Email/SMS notifications<br>
+                            📈 <strong>Reports:</strong> Automated generation<br>
+                            🤖 <strong>AI Insights:</strong> Predictive analytics
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Complete Campus WiFi Layout -->
+        <div class="slide">
+            <h2>Complete Campus WiFi Coverage Plan</h2>
+            <div style="margin-top: 30px;">
+                <div class="campus-layout" style="height: 500px;">
+                    <!-- Buildings -->
+                    <div class="building" style="top: 30px; left: 60px; width: 100px; height: 80px;">
+                        <div style="font-size: 0.8em;">Admin Block<br>📶 15 APs<br>👥 200 users</div>
+                    </div>
+                    <div class="building" style="top: 30px; right: 60px; width: 120px; height: 80px;">
+                        <div style="font-size: 0.8em;">Library<br>📶 25 APs<br>👥 500 users</div>
+                    </div>
+                    <div class="building" style="top: 150px; left: 40px; width: 140px; height: 100px;">
+                        <div style="font-size: 0.8em;">Engineering<br>📶 30 APs<br>👥 400 users<br>🔧 Labs</div>
+                    </div>
+                    <div class="building" style="top: 150px; right: 40px; width: 140px; height: 100px;">
+                        <div style="font-size: 0.8em;">Science Block<br>📶 25 APs<br>👥 350 users<br>🧪 Labs</div>
+                    </div>
+                    <div class="building" style="bottom: 120px; left: 80px; width: 120px; height: 90px;">
+                        <div style="font-size: 0.8em;">Student Center<br>📶 20 APs<br>👥 600 users</div>
+                    </div>
+                    <div class="building" style="bottom: 120px; right: 80px; width: 120px; height: 90px;">
+                        <div style="font-size: 0.8em;">Sports Complex<br>📶 15 APs<br>👥 300 users</div>
+                    </div>
+                    <div class="building" style="bottom: 30px; left: 120px; width: 260px; height: 60px;">
+                        <div style="font-size: 0.8em;">Cafeteria & Dining Hall - 📶 18 APs - 👥 800 users</div>
+                    </div>
+                    
+                    <!-- Outdoor APs -->
+                    <div class="network-node" style="top: 200px; left: 250px; background: rgba(0,255,0,0.8);">🌳</div>
+                    <div class="network-node" style="top: 300px; left: 350px; background: rgba(0,255,0,0.8);">🌳</div>
+                    <div class="network-node" style="bottom: 200px; left: 300px; background: rgba(0,255,0,0.8);">🌳</div>
+                    
+                    <!-- WiFi Coverage Zones -->
+                    <div class="wifi-coverage" style="top: 80px; left: 80px; width: 200px; height: 200px;"></div>
+                    <div class="wifi-coverage" style="top: 80px; right: 80px; width: 200px; height: 200px;"></div>
+                    <div class="wifi-coverage" style="top: 180px; left: 180px; width: 240px; height: 240px;"></div>
+                    <div class="wifi-coverage" style="bottom: 100px; left: 120px; width: 300px; height: 200px;"></div>
+                </div>
+                
+                <div class="content-grid" style="margin-top: 30px;">
+                    <div class="tech-specs">
+                        <strong>📊 Coverage Statistics:</strong><br>
+                        • Total Access Points: 148<br>
+                        • Coverage Area: 95% of campus<br>
+                        • Concurrent Users: 3,150+<br>
+                        • Network Segments: 5 VLANs<br>
+                        • Outdoor Coverage: 12 APs
+                    </div>
+                    <div class="tech-specs">
+                        <strong>🔧 Technical Specifications:</strong><br>
+                        • WiFi 6 (802.11ax) standard<br>
+                        • WPA3-Enterprise security<br>
+                        • Dual-band (2.4/5 GHz) + WiFi 6E<br>
+                        • PoE+ power delivery<br>
+                        • Centralized management
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 14: Cost Analysis & ROI -->
+        <div class="slide">
+            <h2>Cost Analysis & Return on Investment</h2>
+            <div class="content-grid">
+                <div>
+                    <h3>💰 Implementation Costs</h3>
+                    <div class="tech-specs">
+                        <strong>Hardware Costs:</strong><br>
+                        • Access Points (148 units): $220,000<br>
+                        • Core/Distribution Switches: $180,000<br>
+                        • Wireless Controllers: $50,000<br>
+                        • Cabling & Installation: $120,000<br>
+                        • UPS & Power Infrastructure: $60,000<br><br>
+                        
+                        <strong>Software & Licensing:</strong><br>
+                        • Management Software: $40,000<br>
+                        • Security Licenses: $30,000<br>
+                        • Support & Maintenance: $50,000<br><br>
+                        
+                        <strong>Professional Services:</strong><br>
+                        • Site Survey & Design: $25,000<br>
+                        • Installation & Configuration: $45,000<br>
+                        • Training & Documentation: $20,000<br><br>
+                        
+                        <strong>Total Investment: $840,000</strong>
+                    </div>
+                </div>
+                <div>
+                    <h3>📈 ROI & Benefits</h3>
+                    <ul class="feature-list">
+                        <li><strong>Operational Savings:</strong><br>
+                        Reduced IT support costs, automated management</li>
+                        <li><strong>Enhanced Productivity:</strong><br>
+                        Faster connectivity, improved collaboration</li>
+                        <li><strong>Educational Technology:</strong><br>
+                        Support for modern learning methods</li>
+                        <li><strong>Research Capabilities:</strong><br>
+                        High-speed data transfer for research</li>
+                        <li><strong>Student Satisfaction:</strong><br>
+                        Improved campus experience</li>
+                    </ul>
+                    
+                    <div class="diagram">
+                        <h4>💡 5-Year Projection:</h4>
+                        <div style="font-size: 1.1em; margin-top: 15px;">
+                            📊 <strong>Cost Savings:</strong> $200,000/year<br>
+                            📈 <strong>Productivity Gains:</strong> 25% improvement<br>
+                            👥 <strong>User Growth:</strong> 15% annually<br>
+                            🎓 <strong>Academic Impact:</strong> Enhanced learning<br>
+                            🏆 <strong>ROI:</strong> 3.2 years payback period
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 15: Conclusion & Future Roadmap -->
+        <div class="slide">
+            <h2>Conclusion & Future Roadmap</h2>
+            <div class="content-grid">
+                <div>
+                    <h3>✅ Key Achievements</h3>
+                    <ul class="feature-list">
+                        <li><strong>Comprehensive Coverage:</strong><br>
+                        Campus-wide WiFi 6 implementation</li>
+                        <li><strong>Scalable Architecture:</strong><br>
+                        Future-ready infrastructure design</li>
+                        <li><strong>Security Excellence:</strong><br>
+                        Multi-layered protection framework</li>
+                        <li><strong>Operational Efficiency:</strong><br>
+                        Centralized management and monitoring</li>
+                        <li><strong>User Experience:</strong><br>
+                        Seamless connectivity across all departments</li>
+                    </ul>
+                    
+                    <h3>🔮 Future Enhancements</h3>
+                    <div class="tech-specs">
+                        <strong>Year 2-3 Upgrades:</strong><br>
+                        • WiFi 7 adoption<br>
+                        • AI-powered optimization<br>
+                        • IoT integration expansion<br>
+                        • 5G campus connectivity<br>
+                        • Edge computing integration
+                    </div>
+                </div>
+                <div>
+                    <h3>🎯 Success Metrics Achieved</h3>
+                    <div class="diagram">
+                        <div style="font-size: 1.2em; line-height: 2;">
+                            ✅ <strong>95% Campus Coverage</strong><br>
+                            ✅ <strong>3,150+ Concurrent Users</strong><br>
+                            ✅ <strong>50+ Mbps Average Speed</strong><br>
+                            ✅ <strong>WPA3-Enterprise Security</strong><br>
+                            ✅ <strong>5 Network Segments</strong><br>
+                            ✅ <strong>24/7 Monitoring</strong><br>
+                            ✅ <strong>Zero-Touch Provisioning</strong><br>
+                            ✅ <strong>Multi-Device Support</strong>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 30px; text-align: center;">
+                        <h3>👨‍🎓 Team Contribution Summary</h3>
+                        <div style="font-size: 1.1em; line-height: 1.8; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px;">
+                            <strong>Anas:</strong> Network fundamentals & operations<br>
+                            <strong>Abdullah:</strong> Infrastructure planning & design<br>
+                            <strong>Abdul Rehman:</strong> Implementation & security<br><br>
+                            <em>Supervised by Prof. Muzammil</em>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn" onclick="previousSlide()">◀ Previous</button>
+        <button class="nav-btn" onclick="nextSlide()">Next ▶</button>
+        <button class="nav-btn" onclick="toggleFullscreen()">🔍 Fullscreen</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        document.getElementById('total-slides').textContent = totalSlides;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            document.getElementById('current-slide').textContent = currentSlide + 1;
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function previousSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowRight' || event.key === ' ') {
+                nextSlide();
+            } else if (event.key === 'ArrowLeft') {
+                previousSlide();
+            } else if (event.key === 'f' || event.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        // Touch/swipe support for mobile
+        let startX = 0;
+        let endX = 0;
+
+        document.addEventListener('touchstart', function(event) {
+            startX = event.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', function(event) {
+            endX = event.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (endX < startX - 50) {
+                nextSlide();
+            }
+            if (endX > startX + 50) {
+                previousSlide();
+            }
+        }
+
+        // Auto-advance (optional - can be enabled)
+        // setInterval(nextSlide, 30000); // 30 seconds per slide
+    </script>
+</body>
+</html>
